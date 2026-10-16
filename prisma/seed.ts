@@ -1,0 +1,6 @@
+import {PrismaClient,Prisma} from '@prisma/client';
+import {hash} from 'bcryptjs';
+import {seedProducts,seedCombos} from '../src/lib/menu';
+const db=new PrismaClient();
+async function main(){for(const p of seedProducts)await db.product.upsert({where:{id:p.id},update:{},create:p});for(const b of seedCombos)await db.combo.upsert({where:{id:b.id},update:{},create:{...b,items:b.items as Prisma.InputJsonValue}});await db.settings.upsert({where:{id:'main'},update:{},create:{id:'main'}});for(const [id,name]of [['iset','ISET'],['isima','ISIMa'],['fseg','FSEG'],['workplaces','Entreprises voisines'],['events','Événements']])await db.campaign.upsert({where:{id},update:{},create:{id,name}});if(process.env.OWNER_EMAIL&&process.env.OWNER_PASSWORD){if(process.env.OWNER_PASSWORD.length<12)throw Error('OWNER_PASSWORD: au moins 12 caractères.');await db.user.upsert({where:{email:process.env.OWNER_EMAIL.toLowerCase()},update:{},create:{email:process.env.OWNER_EMAIL.toLowerCase(),name:'Équipe Romantica',password:await hash(process.env.OWNER_PASSWORD,12),role:'OWNER',verified:true}});}console.log('38 produits, 3 formules inactives, configuration et campagnes initialisées.');}
+main().finally(()=>db.$disconnect());

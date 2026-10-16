@@ -1,0 +1,10 @@
+ALTER TABLE "Product" ADD CONSTRAINT "product_price_positive" CHECK ("price" > 0);
+ALTER TABLE "Product" ADD CONSTRAINT "product_cost_nonnegative" CHECK ("cost" IS NULL OR "cost" >= 0);
+ALTER TABLE "Combo" ADD CONSTRAINT "combo_price_positive" CHECK ("price" > 0);
+ALTER TABLE "User" ADD CONSTRAINT "reserved_points_nonnegative" CHECK ("reservedPoints" >= 0);
+ALTER TABLE "Order" ADD CONSTRAINT "order_totals_consistent" CHECK ("total" > 0 AND "subtotal" >= "total" AND "discount" = "subtotal" - "total");
+ALTER TABLE "Order" ADD CONSTRAINT "order_points_nonnegative" CHECK ("eligiblePoints" >= 0);
+ALTER TABLE "Order" ADD CONSTRAINT "order_cost_nonnegative" CHECK ("cost" IS NULL OR "cost" >= 0);
+ALTER TABLE "Settings" ADD CONSTRAINT "discount_range" CHECK ("studentPercent" >= 1 AND "studentPercent" <= 50);
+ALTER TABLE "Settings" ADD CONSTRAINT "margin_range" CHECK ("minMarginPercent" >= 0 AND "minMarginPercent" <= 90);
+ALTER TABLE "Campaign" ADD CONSTRAINT "campaign_spend_nonnegative" CHECK ("spend" IS NULL OR "spend" >= 0);

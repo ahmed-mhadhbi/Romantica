@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+enum Role {
+  CUSTOMER
+  OWNER
+  CASHIER
+  KITCHEN
+}
+enum OrderStatus {
+  REQUESTED
+  ACCEPTED
+  PREPARING
+  READY
+  COLLECTED
+  CANCELED
+  REFUNDED
+}
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  name String
+  password String
+  role Role @default(CUSTOMER)
+  verified Boolean @default(false)
+  studentUntil DateTime?
+  points Int @default(0)
+  reservedPoints Int @default(0)
+  marketingConsent Boolean @default(false)
+  sessions Session[]
+  orders Order[]
+  ledger Ledger[]
+  createdAt DateTime @default(now())
+}
+model Session {
+  token String @id
+  userId String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  expiresAt DateTime
+}
+model Product {
+  id String @id
+  name String
+  description String
+  category String
+  price Int
+  cost Int?
+  available Boolean @default(true)
+  studentEligible Boolean @default(false)
+  loyaltyEligible Boolean @default(false)
+  rewardEligible Boolean @default(false)
+  image String?
+  updatedAt DateTime @updatedAt
+}
+model Combo {
+  id String @id
+  name String
+  people Int
+  price Int
+  items Json
+  active Boolean @default(false)
+  updatedAt DateTime @updatedAt
+}
+model Settings {
+  id String @id @default("main")
+  studentActive Boolean @default(false)
+  studentPercent Int @default(20)
+  studentStartsAt DateTime?
+  studentEndsAt DateTime?
+  comboPoints Boolean @default(false)
+  minMarginPercent Int @default(20)
+  orderingEnabled Boolean @default(false)
+  openingHours String @default("Horaires à confirmer par le restaurant")
+  whatsapp String @default("")
+  address String @default("Mahdia, Tunisie")
+  mapsUrl String @default("https://www.google.com/maps/search/?api=1&query=Romantica+Mahdia+Tunisie")
+}
+model Order {
+  id String @id @default(cuid())
+  idempotencyKey String @unique
+  fingerprint String
+  userId String?
+  user User? @relation(fields:[userId],references:[id])
+  customerName String
+  phone String
+  pickupAt DateTime?
+  note String @default("")
+  mode String
+  status OrderStatus @default(REQUESTED)
+  lines Json
+  subtotal Int
+  discount Int
+  total Int
+  cost Int?
+  eligiblePoints Int
+  rewardHeld Boolean @default(false)
+  receipt String? @unique
+  campaignId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ledger Ledger[]
+  @@index([status,createdAt])
+}
+model Ledger {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id])
+  orderId String?
+  order Order? @relation(fields:[orderId],references:[id])
+  kind String
+  delta Int
+  reason String
+  createdAt DateTime @default(now())
+  @@unique([orderId,kind])
+}
+model Audit {
+  id String @id @default(cuid())
+  actorId String
+  action String
+  target String
+  details Json
+  createdAt DateTime @default(now())
+}
+model RateLimit {
+  key String @id
+  count Int @default(1)
+  expiresAt DateTime
+}
+model Campaign {
+  id String @id
+  name String
+  active Boolean @default(false)
+  spend Int?
+  createdAt DateTime @default(now())
+}
+model Feedback {
+  id String @id @default(cuid())
+  userId String?
+  message String
+  createdAt DateTime @default(now())
+}
